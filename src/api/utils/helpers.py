@@ -1,12 +1,12 @@
 """Contain utility functions and constants."""
 import datetime
-import requests
 import os
 from collections import namedtuple
-from flask import jsonify, request, current_app, url_for, Response
+
+import requests
+from flask import Response, current_app, jsonify, request, url_for
 
 from api.models import Activity, ActivityType, Cohort, Country, Role
-
 
 ParsedResult = namedtuple(
         'ParsedResult',
@@ -169,7 +169,8 @@ def add_extra_user_info(token, user_id, url=os.environ.get('ANDELA_API_URL')): #
         token(str): valid jwt token
         user_id(str): id for user to retive information about
 
-    returns: tuple(location, cohort, api_response)
+    Returns:
+        tuple(location, cohort, api_response)
     """
     cohort = location = None
     Bearer = 'Bearer '

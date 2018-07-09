@@ -6,11 +6,10 @@ import sys
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager, Shell, prompt_bool
 
-from api.utils.initial_data import test_data, production_data
-from api.models import Activity, Society, User, db, Country, Role, Cohort
+from api.models import Activity, Cohort, Country, Role, Society, User, db
+from api.utils.initial_data import production_data, test_data
 from app import create_app
 from run_tests import test
-
 
 app = create_app(environment=os.environ.get('APP_SETTINGS', "Development"))
 manager = Manager(app)
@@ -53,18 +52,36 @@ def seed():
         "Testing": test_data,
         "Staging": production_data
     }
-    if environment == "Testing" or \
-        prompt_bool("\n\n\nThis operation will remove all existing data."
-                    " Are you sure you want to continue?"):
+
+    if environment.lower() in ["production", "staging"]:
+        print("Seeding data to DB: NOTE create, migrate and upgrade your DB")
         try:
-            db.session.remove()
-            db.drop_all()
-            db.create_all()
             db.session.add_all(data_mapping.get(environment))
-            print("\n\n\nTables seeded successfully.\n\n\n")
+            return print("Data dumped in DB succefully.")
         except Exception as e:
             db.session.rollback()
-            print("\n\n\nFailed:\n", e, "\n\n")
+            return print("Error occured, database rolledback: ", e)
+
+    else:
+        mes = "\n\n\nThis operation will remove all existing data" \
+             " and create tables in your database\n" \
+             " Type n to skip dropping existing data and tables."
+
+        if os.environ.get('Development') and prompt_bool(mes):
+            try:
+                db.session.remove()
+                db.drop_all()
+                db.create_all()
+                print("\nTables created succesfully.\n")
+            except Exception as e:
+                return print("\nError while creating tables: ", e)
+
+        try:
+            db.session.add_all(data_mapping.get(environment))
+            return print("\n\n\nTables seeded successfully.\n\n\n")
+        except Exception as e:
+            db.session.rollback()
+            return print("\n\n\nFailed:\n", e, "\n\n")
 
 
 @manager.command

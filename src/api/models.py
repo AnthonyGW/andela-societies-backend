@@ -175,6 +175,8 @@ class Society(Base):
     logged_activities = db.relationship('LoggedActivity', backref='society',
                                         lazy='dynamic')
     cohorts = db.relationship('Cohort', backref='society', lazy='dynamic')
+    redemptions = db.relationship('RedemptionRequest', backref='society',
+                                  lazy='dynamic')
 
     @property
     def total_points(self):
@@ -256,3 +258,4 @@ class RedemptionRequest(Base):
     status = db.Column(db.String, default="pending", nullable=False)
     country_id = db.Column(db.String, db.ForeignKey('countries.uuid'),
                            nullable=False)
+    society_id = db.Column(db.String, db.ForeignKey('societies.uuid'))

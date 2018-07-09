@@ -1,11 +1,29 @@
 """RedemptionRequest Module."""
 
-from flask import request, g
+from flask import g, request
 from flask_restplus import Resource
 
-from api.utils.auth import token_required, roles_required
-from api.utils.helpers import find_item, paginate_items, response_builder
-from ..models import Society, RedemptionRequest, User, Country
+from api.utils.auth import roles_required, token_required
+from api.utils.helpers import find_item, response_builder
+from api.utils.marshmallow_schemas import basic_info_schema, redemption_schema
+
+from ..models import Country, RedemptionRequest, Society
+
+
+def redemption_paginate(data, society=None):
+    society_redemp_list = []
+    for redmption in data:
+        data, _ = redemption_schema.dump(redmption)
+        data["center"], _ = basic_info_schema.dump(redmption.country)
+        data['society'], _ = basic_info_schema.dump(redmption.society)
+        society_redemp_list.append(data)
+
+    mes = 'fetched successfully'
+    return response_builder(dict(
+        status="success",
+        data=society_redemp_list,
+        message=mes
+    ), 200)
 
 
 class PointRedemptionAPI(Resource):
@@ -17,7 +35,7 @@ class PointRedemptionAPI(Resource):
 
     @classmethod
     @token_required
-    @roles_required(["Society President"])
+    @roles_required(["society president"])
     def post(cls):
         """Create Redemption Request."""
         payload = request.get_json(silent=True)
@@ -27,9 +45,9 @@ class PointRedemptionAPI(Resource):
                 status="fail"
             ), 400)
 
-        name = payload.get("name")
+        name = payload.get("reason")
         value = payload.get("value")
-        country_input = payload.get("country")
+        country_input = payload.get("center")
 
         country = Country.query.filter_by(name=country_input).first()
 
@@ -38,16 +56,18 @@ class PointRedemptionAPI(Resource):
                 name=name,
                 value=value,
                 user=g.current_user,
-                country=country
+                country=country,
+                society=g.current_user.society
             )
-
             redemp_request.save()
+            data, _ = redemption_schema.dump(redemp_request)
+            data["center"], _ = basic_info_schema.dump(country)
 
             return response_builder(dict(
-                message="Redemption request created. Success Ops will be in"
+                message="Redemption request created. success ops will be in"
                         " touch soon.",
                 status="success",
-                data=redemp_request.serialize()
+                data=data
             ), 201)
 
         else:
@@ -58,7 +78,7 @@ class PointRedemptionAPI(Resource):
 
     @classmethod
     @token_required
-    @roles_required(["Society President", "Success Ops"])
+    @roles_required(["society president", "success ops"])
     def put(cls, redeem_id=None):
         """Edit Redemption Requests."""
         payload = request.get_json(silent=True)
@@ -103,60 +123,56 @@ class PointRedemptionAPI(Resource):
 
     @classmethod
     @token_required
-    @roles_required(["CIO", "President", "Vice President", "Secretary"])
+    @roles_required(["cio", "society president", "vice president", "secretary"])
     def get(cls, redeem_id=None):
         """Get Redemption Requests."""
         if redeem_id:
             redemp_request = RedemptionRequest.query.get(redeem_id)
             return find_item(redemp_request)
         else:
-            search_term_name = request.args.get('name')
+            search_term_name = request.args.get('society')
             if search_term_name:
-                redemp_request = RedemptionRequest.query.filter_by(
+                society = Society.query.filter_by(
                                         name=search_term_name).first()
-                return find_item(redemp_request)
+                if not society:
+                    mes = f"Society with name:{search_term_name} not found"
+                    return {"message": mes}, 400
+
+                redemp_request = RedemptionRequest.query.filter_by(
+                                                society_id=society.uuid).all()
+
+                return redemption_paginate(redemp_request, society)
 
             search_term_status = request.args.get('status')
             if search_term_status:
                 redemp_request = RedemptionRequest.query.filter_by(
                                         status=search_term_status)
-                return paginate_items(redemp_request)
+                return redemption_paginate(redemp_request)
 
-            search_term_society = request.args.get('society')
-            if search_term_society:
-                society_query = Society.query.filter_by(
-                                name=search_term_society).first()
-                if not society_query:
-                    return response_builder(dict(
-                        status="success",
-                        data=dict(data_list=[],
-                                  count=0),
-                        message="Resources were not found."
-                    ), 404)
-
-                redemp_request = (
-                    RedemptionRequest.query.join(User,
-                                                 RedemptionRequest.user).filter(
-                                        User.society_id ==
-                                        society_query.uuid
-                                        ))
-                return paginate_items(redemp_request)
+            search_term_name = request.args.get('name')
+            if search_term_name:
+                redemp_request = RedemptionRequest.query.filter_by(
+                                        name=search_term_name)
+                return redemption_paginate(redemp_request)
 
             search_term_country = request.args.get("country")
             if search_term_country:
                 country_query = Country.query.filter_by(
                             name=search_term_country).first()
+                if not country_query:
+                    mes = f"country with name:{search_term_name} not found"
+                    return {"message": mes}, 400
 
                 redemp_request = RedemptionRequest.query.filter_by(
                                         country=country_query)
-                return paginate_items(redemp_request)
+                return redemption_paginate(redemp_request)
 
         redemption_requests = RedemptionRequest.query
-        return paginate_items(redemption_requests)
+        return redemption_paginate(redemption_requests)
 
     @classmethod
     @token_required
-    @roles_required(["Success Ops", "Society President"])
+    @roles_required(["success ops", "society president"])
     def delete(cls, redeem_id=None):
         """Delete Redemption Requests."""
         if not redeem_id:
@@ -182,12 +198,12 @@ class PointRedemptionRequestNumeration(Resource):
 
     After approval or rejection the relevant society get the result of the
     request reflects on the amount of points.
-    Only done by Success Ops.
+    Only done by success ops.
     """
 
     @classmethod
     @token_required
-    @roles_required(["Success Ops"])
+    @roles_required(["success ops", "cio"])
     def put(cls, redeem_id=None):
         """Approve or Reject Redemption requests."""
         payload = request.get_json(silent=True)

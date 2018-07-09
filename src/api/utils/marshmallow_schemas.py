@@ -1,11 +1,10 @@
 """Validation schemas."""
 from datetime import date
-from marshmallow import (
-    Schema, fields, post_load, validates,
-    validate, ValidationError, validates_schema
-)
 
-from api.models import User, Activity, ActivityType, Role
+from marshmallow import (Schema, ValidationError, fields, post_load, validate,
+                         validates, validates_schema)
+
+from api.models import Activity, ActivityType, Role, User
 
 
 class BaseSchema(Schema):
@@ -257,6 +256,15 @@ class UserSchema(BaseSchema):
                               validate=[validate.Length(max=36)])
 
 
+class RedemptionSchema(BaseSchema):
+    """Redemption serializer/validator."""
+
+    status = fields.String(dump_only=True, dump_to='status',
+                           validate=[validate.Length(max=36)])
+    value = fields.Integer(dump_only=True, dump_to='value',
+                          validate=[validate.Length(max=36)])
+
+
 activity_types_schema = ActivityTypesSchema(many=True)
 new_activity_type_schema = ActivityTypesSchema()
 activity_schema = ActivitySchema()
@@ -271,3 +279,4 @@ base_schema = BaseSchema()
 user_schema = UserSchema()
 basic_info_schema = BaseSchema()
 society_schema = SocietySchema()
+redemption_schema = RedemptionSchema()

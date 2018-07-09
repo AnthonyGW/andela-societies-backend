@@ -28,6 +28,9 @@ public_key_token = os.environ.get('PUBLIC_KEY')
 
 if public_key_token and authorization_token and url:
     try:
+        API_IDENTIFIER = "andela.com"
+        AUTH0_DOMAIN = "accounts.andela.com"
+
         public_key = base64.b64decode(public_key_token).decode("utf-8")
         payload = jwt.decode(authorization_token,
                              public_key,
@@ -35,7 +38,9 @@ if public_key_token and authorization_token and url:
                              options={
                                  'verify_signature': True,
                                  'verify_exp': True
-                             })
+                             },
+                             audience=API_IDENTIFIER,
+                             issuer=AUTH0_DOMAIN)
         Bearer = 'Bearer '
         headers = {'Authorization': Bearer + authorization_token}
 
@@ -128,14 +133,14 @@ cohort_14_ke = Cohort(name='Cohort 14 Test', country=kenya)
 
 # roles available
 roles = [
-         Role(uuid="-KXGy1EB1oimjQgFim6F", name="Success"),
-         Role(uuid="-KXGy1EB1oimjQgFim6L", name="Finance"),
-         Role(uuid="-KXGy1EB1oimjQgFim6C", name="Fellow"),
-         Role(uuid="-KkLwgbeJUO0dQKsEk1i", name="Success Ops"),
+         Role(uuid="-KXGy1EB1oimjQgFim6F", name="success"),
+         Role(uuid="-KXGy1EB1oimjQgFim6L", name="finance"),
+         Role(uuid="-KXGy1EB1oimjQgFim6C", name="fellow"),
+         Role(uuid="-KkLwgbeJUO0dQKsEk1i", name="success ops"),
          Role(uuid="-KiihfZoseQeqC6bWTau", name="Andelan"),
-         Role(name="Society President"),
-         Role(name="Society Vice President"),
-         Role(name="Society Secretary")
+         Role(name="society president"),
+         Role(name="society vice president"),
+         Role(name="society secretary")
          ]
 
 # users
@@ -168,7 +173,7 @@ president.roles.append(roles[5])
 # success ops
 success_ops = User(
     uuid="-KdQsMtixG4U0y_-yJEF",
-    name="Test Success Ops",
+    name="Test success ops",
     photo="https://lh6.googleusercontent.com/-1DhBLOJentg/AAAAAAAAA"
           "AI/AAAAAAnAABc/ImeP_cAI/photo.jpg?sz=50",
     email="test.successops.societies@andela.com",

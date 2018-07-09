@@ -1,15 +1,16 @@
 """Module to house setup, teardown and utility class for testing."""
 
-import os
-import datetime
 import base64
+import datetime
+import os
 from unittest import TestCase, mock
+
 from jose import jwt
 
-from app import create_app
 from api.models import (Activity, ActivityType, Cohort, Country,
-                        LoggedActivity, Society, User, Role, RedemptionRequest,
+                        LoggedActivity, RedemptionRequest, Role, Society, User,
                         db)
+from app import create_app
 
 
 class BaseTestCase(TestCase):
@@ -58,7 +59,7 @@ class BaseTestCase(TestCase):
             "picture": "https://www.link.com",
             "roles": {
                     "Andelan": "-Ktest_andelan_id",
-                    "Success Ops": "-KkLwgbeJUO0dQKsEk1i"
+                    "success ops": "-KkLwgbeJUO0dQKsEk1i"
             }
         },
         "exp": exp_date + datetime.timedelta(days=1)
@@ -90,7 +91,7 @@ class BaseTestCase(TestCase):
             "picture": "https://bit.ly/2MeuICK",
             "roles": {
                     "Andelan": "-Ktest_andelan_id",
-                    "Society President": "-KXGyd2udi2"
+                    "society president": "-KXGyd2udi2"
             }
         },
         "exp": exp_date + datetime.timedelta(days=1)
@@ -106,7 +107,7 @@ class BaseTestCase(TestCase):
             "picture": "https://bit.ly/2MeuICK",
             "roles": {
                     "Andelan": "-Ktest_andelan_id",
-                    "CIO": "-KXGionceu24i2y"
+                    "cio": "-KXGionceu24i2y"
             }
         },
         "exp": exp_date + datetime.timedelta(days=1)
@@ -156,6 +157,20 @@ class BaseTestCase(TestCase):
 
         # test client
         self.client = self.app.test_client()
+
+        test_tokkens_info = [
+                        self.test_user2_payload,
+                        self.test_user_payload,
+                        self.test_successops_payload,
+                        self.test_society_president_role_payload,
+                        self.test_cio_role_payload,
+                        self.incomplete_payload,
+                        self.expired_payload,
+                        self.test_auth_role_payload
+        ]
+        required_token_info = {"aud": 'tests', "iss": 'tests'}
+        for token_info in test_tokkens_info:
+            token_info.update(required_token_info)
 
         self.header = {
             "Authorization": self.generate_token(self.test_user_payload),
@@ -207,16 +222,18 @@ class BaseTestCase(TestCase):
 
         # test roles
         self.successops_role = Role(uuid="-KkLwgbeJUO0dQKsEk1i",
-                                    name="Success Ops")
+                                    name="success ops")
         self.fellow_role = Role(uuid="-KXGy1EB1oimjQgFim6C", name="Fellow")
-        self.success_role = Role(uuid="-KXGy1EB1oimjQgFim6F", name="Success")
-        self.finance_role = Role(uuid="-KXGy1EB1oimjQgFim6L", name="Finance")
+        self.success_role = Role(uuid="-KXGy1EB1oimjQgFim6F",
+                                 name="success ops")
+        self.finance_role = Role(uuid="-KXGy1EB1oimjQgFim6L", name="finance")
         self.lf_role = Role(uuid="d47ec8a7-3f09-44a5-8188-ff1d40ef35b6",
                             name="Learning Facilitator")
-        self.president_role = Role(uuid="-KXGyd2udi2", name="President")
-        self.v_president_role = Role(uuid="-KXGy32odnd", name="Vice President")
-        self.secretary_role = Role(uuid="-KXGy12odfn2idn", name="Secretary")
-        self.cio_role = Role(uuid="-KXGionceu24i2y", name="CIO")
+        self.president_role = Role(uuid="-KXGyd2udi2",
+                                   name="society president")
+        self.v_president_role = Role(uuid="-KXGy32odnd", name="vice president")
+        self.secretary_role = Role(uuid="-KXGy12odfn2idn", name="secretary")
+        self.cio_role = Role(uuid="-KXGionceu24i2y", name="cio")
 
         # test cohorts
         self.cohort_12_Ke = Cohort(name="cohort-12", country=self.kenya)
@@ -262,6 +279,8 @@ class BaseTestCase(TestCase):
             cohort=self.cohort_12_Ke,
             society=self.phoenix
         )
+        self.president.roles.append(self.president_role)
+
         self.vice_president = User(
             uuid="-KdQsMtixGc2nuekwnd",
             name="Test Vice-President",
@@ -272,6 +291,8 @@ class BaseTestCase(TestCase):
             cohort=self.cohort_12_Ke,
             society=self.sparks
         )
+        self.vice_president.roles.append(self.v_president_role)
+
         self.secretary = User(
             uuid="-KdQsMcwkncwnclkj",
             name="Test Secretary",
@@ -282,6 +303,7 @@ class BaseTestCase(TestCase):
             cohort=self.cohort_12_Ke,
             society=self.invictus
         )
+        self.secretary.roles.append(self.secretary_role)
 
         # test ActivityType
         self.hackathon = ActivityType(name="Hackathon",

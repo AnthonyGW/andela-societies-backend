@@ -1,6 +1,7 @@
 """Test suite for Point Redemption Module."""
 import json
 import uuid
+
 from .base_test import BaseTestCase
 
 
@@ -22,10 +23,10 @@ class PointRedemptionBaseTestCase(BaseTestCase):
     def test_create_redemption_request(self):
         """Test creation of Redemption Request through endpoint."""
         new_request = dict(
-            name="T-shirt Funds Request",
+            reason="T-shirt Funds Request",
             value=2500,
             user_id=self.test_user.uuid,
-            country="Nigeria"
+            center="Nigeria"
             )
 
         response = self.client.post("api/v1/societies/redeem",
@@ -165,7 +166,6 @@ class PointRedemptionBaseTestCase(BaseTestCase):
                         f"api/v1/societies/redeem/{str(uuid.uuid4())}",
                         headers=self.society_president,
                         content_type='application/json')
-
         message = "does not exist"
         response_details = json.loads(response.data)
 
@@ -179,11 +179,12 @@ class PointRedemptionBaseTestCase(BaseTestCase):
                     headers=self.society_president,
                     content_type='application/json')
 
-        message = "does not exist"
+        message = "fetched successfully"
         response_details = json.loads(response.data)
 
         self.assertIn(message, response_details["message"])
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response_details['data'])
 
     def test_get_non_existing_redemption_requests_by_society(self):
         """Test retrieval of Redemption Requests."""
@@ -191,12 +192,11 @@ class PointRedemptionBaseTestCase(BaseTestCase):
                     f"api/v1/societies/redeem?society={str(uuid.uuid4())}",
                     headers=self.society_president,
                     content_type='application/json')
-
-        message = "not found"
+        message = f'not found'
         response_details = json.loads(response.data)
 
-        self.assertIn(message, response_details["message"])
-        self.assertEqual(response.status_code, 404)
+        self.assertTrue(response_details["message"].find(message))
+        self.assertEqual(response.status_code, 400)
 
     def test_get_non_existing_redemption_requests_by_status(self):
         """Test retrieval of Redemption Requests."""
@@ -205,11 +205,12 @@ class PointRedemptionBaseTestCase(BaseTestCase):
                     headers=self.society_president,
                     content_type='application/json')
 
-        message = "not found"
+        message = "fetched successfully"
         response_details = json.loads(response.data)
 
         self.assertIn(message, response_details["message"])
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response_details['data'])
 
     def test_get_non_existing_redemption_requests_by_country(self):
         """Test retrieval of Redemption Requests."""
@@ -218,12 +219,11 @@ class PointRedemptionBaseTestCase(BaseTestCase):
                     headers=self.society_president,
                     content_type='application/json')
 
-        message = "not found"
+        message = "country with name:None not found"
         response_details = json.loads(response.data)
 
         self.assertIn(message, response_details["message"])
-        self.assertEqual(response.status_code, 404)
-
+        self.assertEqual(response.status_code, 400)
 
     def test_edit_redemption_request(self):
         """Test edit of Redemption Request through endpoint."""
@@ -283,7 +283,7 @@ class PointRedemptionBaseTestCase(BaseTestCase):
 
     def test_edit_redemption_request_no_payload(self):
         """Test editing request without payload fails."""
-        response = self.client.put(f"api/v1/societies/redeem{self.sparks.uuid}",
+        response = self.client.put(f"api/v1/societies/redeem/{self.sparks.uuid}",
                                    headers=self.society_president,
                                    content_type='application/json')
 
