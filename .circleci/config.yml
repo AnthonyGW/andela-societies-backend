@@ -3,9 +3,6 @@
 defaults: &defaults
   docker:
     - image: circleci/python:3.6.1
-      auth:
-        username: _json_key
-        password: '${SERVICE_ACCOUNT_JSON_KEY}'
   working_directory: ~/andela-societies-backend
 
 version: 2
