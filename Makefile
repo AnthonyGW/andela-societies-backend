@@ -48,7 +48,7 @@ env_file:
 test:env_file
 	${INFO} "Login to docker registry"
 	@ echo " "
-  @ docker login
+  @ docker login -u _json_key -p ${SERVICE_ACCOUNT_JSON_KEY} $(DOCKER_REGISTRY)
 	${INFO} "Creating cache docker volume"
 	@ echo " "
 	@ docker volume create --name=cache > /dev/null
