@@ -48,8 +48,7 @@ env_file:
 test:env_file
 	${INFO} "Login to docker registry"
 	@ echo " "
-	@ echo ${GCLOUD_SERVICE_KEY} | base64 --decode > ${HOME}/gcloud-service-key.json
-  @ docker login -u _json_key -p "$(cat ${HOME}/gcloud-service-key.json)" https://gcr.io 
+  @ docker login -u _json_key -p ${SERVICE_ACCOUNT_JSON_KEY} https://gcr.io 
 	${INFO} "Creating cache docker volume"
 	@ echo " "
 	@ docker volume create --name=cache > /dev/null
