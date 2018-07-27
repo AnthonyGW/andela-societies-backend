@@ -1,7 +1,7 @@
 PROJECT_NAME := andelasocietiesbackend
 REPO_NAME ?= soc-backend
 ORG_NAME ?= bench-projects
-SERVICE_ACCOUNT_JSON_KEY = ${SERVICE_ACCOUNT_JSON_KEY}
+SERVICE_ACCOUNT_KEY = ${SERVICE_ACCOUNT_JSON_KEY}
 # File names
 DOCKER_TEST_COMPOSE_FILE := docker/test/docker-compose.yml
 DOCKER_REL_COMPOSE_FILE := docker/release/docker-compose.yml
@@ -49,7 +49,7 @@ env_file:
 test:env_file
 	${INFO} "Login to docker registry"
 	@ echo " "
-  @ docker login -u _json_key -p $(SERVICE_ACCOUNT_JSON_KEY) https://gcr.io 
+  @ docker login -u _json_key -p $(SERVICE_ACCOUNT_KEY) https://gcr.io 
 	${INFO} "Creating cache docker volume"
 	@ echo " "
 	@ docker volume create --name=cache > /dev/null
