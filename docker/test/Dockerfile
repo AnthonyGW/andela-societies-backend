@@ -1,4 +1,4 @@
-FROM tonywaithaka/rappy:1
+FROM gcr.io/bench-projects/soc-backend:base-image-0.0.0
 
 MAINTAINER "Crispus Kamau <crispus.kamau@andela.com>"
 

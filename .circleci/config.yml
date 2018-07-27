@@ -15,6 +15,7 @@ jobs:
       - run:
           name: run tests
           command: |
+            docker login -u _json_key -p "$(cat ${HOME}/gcloud-service-key.json)" https://gcr.io
             make test
 
       - store_artifacts:
