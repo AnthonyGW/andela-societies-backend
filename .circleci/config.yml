@@ -3,6 +3,9 @@
 defaults: &defaults
   docker:
     - image: circleci/python:3.6.1
+      auth:
+        username: _json_key
+        password: '${GCLOUD_SERVICE_KEY}'
   working_directory: ~/andela-societies-backend
 
 version: 2
@@ -15,8 +18,6 @@ jobs:
       - run:
           name: run tests
           command: |
-            echo $GCLOUD_SERVICE_KEY | base64 --decode > ${HOME}/gcloud-service-key.json
-            docker login -u _json_key -p "$(cat ${HOME}/gcloud-service-key.json)" https://gcr.io
             make test
 
       - store_artifacts:
