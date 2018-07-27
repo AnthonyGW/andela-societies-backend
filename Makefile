@@ -48,7 +48,7 @@ env_file:
 test:env_file
 	${INFO} "Login to docker registry"
 	@ echo " "
-  @ docker login $(DOCKER_REGISTRY)
+	@ docker login $(DOCKER_REGISTRY)
 	${INFO} "Creating cache docker volume"
 	@ echo " "
 	@ docker volume create --name=cache > /dev/null
